@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Salary to Hourly Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .calculator-container {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen py-8">
+    <div id="calculator" class="calculator-container">
+        <div class="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-lg">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">Salary to Hourly Calculator</h1>
+                <p class="text-gray-600">Convert between different wage types quickly and easily</p>
+            </div>
+
+            <div class="bg-blue-50 rounded-lg p-6 mb-6">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Hours per week
+                    </label>
+                    <input
+                        type="number"
+                        id="hoursPerWeek"
+                        value="40"
+                        min="1"
+                        max="168"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                </div>
+            </div>
+
+            <div class="grid gap-4 mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Annual salary ($)
+                        </label>
+                        <input
+                            type="text"
+                            id="annual"
+                            placeholder="50000"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Monthly salary ($)
+                        </label>
+                        <input
+                            type="text"
+                            id="monthly"
+                            placeholder="4167"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Weekly salary ($)
+                        </label>
+                        <input
+                            type="text"
+                            id="weekly"
+                            placeholder="962"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Daily salary ($)
+                        </label>
+                        <input
+                            type="text"
+                            id="daily"
+                            placeholder="192"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                    </div>
+                </div>
+
+                <div class="bg-green-50 rounded-lg p-4">
+                    <label class="block text-sm font-bold text-green-800 mb-2">
+                        Hourly wage ($)
+                    </label>
+                    <input
+                        type="text"
+                        id="hourly"
+                        placeholder="24.04"
+                        class="w-full px-3 py-2 border-2 border-green-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-lg font-semibold"
+                    />
+                </div>
+            </div>
+
+            <div id="timeIntervals" class="bg-gray-50 rounded-lg p-4 mb-6 hidden">
+                <h3 class="text-lg font-semibold text-gray-800 mb-3">Other time intervals</h3>
+                <div class="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                        <span class="text-gray-600">Per minute:</span>
+                        <span id="perMinute" class="ml-2 font-medium">$0.0000</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-600">Per second:</span>
+                        <span id="perSecond" class="ml-2 font-medium">$0.000000</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-blue-50 rounded-lg p-4">
+                <h3 class="text-lg font-semibold text-blue-800 mb-2">How it works</h3>
+                <div class="text-sm text-blue-700 space-y-1">
+                    <p>• Enter any wage amount in any of the fields above</p>
+                    <p>• All other values will be calculated automatically</p>
+                    <p>• Adjust "Hours per week" to match your work schedule</p>
+                    <p>• Calculations assume: 52 weeks/year, 1 month = 1/12 year</p>
+                </div>
+            </div>
+
+            <div id="calculations" class="mt-6 p-4 bg-yellow-50 rounded-lg hidden">
+                <h3 class="text-lg font-semibold text-yellow-800 mb-2">Sample Calculations</h3>
+                <div class="text-sm text-yellow-700 space-y-1">
+                    <p id="annualCalc"></p>
+                    <p id="monthlyCalc"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class SalaryCalculator {
+            constructor() {
+                this.hoursPerWeek = 40;
+                this.inputs = {
+                    annual: document.getElementById('annual'),
+                    monthly: document.getElementById('monthly'),
+                    weekly: document.getElementById('weekly'),
+                    daily: document.getElementById('daily'),
+                    hourly: document.getElementById('hourly'),
+                    hoursPerWeek: document.getElementById('hoursPerWeek')
+                };
+                this.bindEvents();
+            }
+
+            bindEvents() {
+                // Bind all input events
+                Object.keys(this.inputs).forEach(key => {
+                    if (key === 'hoursPerWeek') {
+                        this.inputs[key].addEventListener('input', (e) => {
+                            this.hoursPerWeek = parseFloat(e.target.value) || 40;
+                            this.recalculateAll();
+                        });
+                    } else {
+                        this.inputs[key].addEventListener('input', (e) => {
+                            this.handleInputChange(key, e.target.value);
+                        });
+                    }
+                });
+            }
+
+            handleInputChange(type, value) {
+                if (value === '' || /^\d*\.?\d*$/.test(value)) {
+                    const calculations = this.calculateFromType(type, value);
+                    this.updateInputs(calculations, type);
+                    this.updateTimeIntervals(calculations.hourly);
+                    this.updateCalculations(calculations);
+                }
+            }
+
+            calculateFromType(type, value) {
+                const val = parseFloat(value) || 0;
+                
+                switch (type) {
+                    case 'annual':
+                        return this.calculateFromAnnual(val);
+                    case 'monthly':
+                        return this.calculateFromMonthly(val);
+                    case 'weekly':
+                        return this.calculateFromWeekly(val);
+                    case 'daily':
+                        return this.calculateFromDaily(val);
+                    case 'hourly':
+                        return this.calculateFromHourly(val);
+                    default:
+                        return {};
+                }
+            }
+
+            calculateFromAnnual(annual) {
+                const monthly = annual / 12;
+                const weekly = annual / 52;
+                const daily = weekly / 5;
+                const hourly = weekly / this.hoursPerWeek;
+                
+                return {
+                    annual: annual.toString(),
+                    monthly: monthly.toFixed(2),
+                    weekly: weekly.toFixed(2),
+                    daily: daily.toFixed(2),
+                    hourly: hourly.toFixed(2)
+                };
+            }
+
+            calculateFromMonthly(monthly) {
+                const annual = monthly * 12;
+                const weekly = (monthly * 12) / 52;
+                const daily = weekly / 5;
+                const hourly = weekly / this.hoursPerWeek;
+                
+                return {
+                    annual: annual.toFixed(2),
+                    monthly: monthly.toString(),
+                    weekly: weekly.toFixed(2),
+                    daily: daily.toFixed(2),
+                    hourly: hourly.toFixed(2)
+                };
+            }
+
+            calculateFromWeekly(weekly) {
+                const annual = weekly * 52;
+                const monthly = annual / 12;
+                const daily = weekly / 5;
+                const hourly = weekly / this.hoursPerWeek;
+                
+                return {
+                    annual: annual.toFixed(2),
+                    monthly: monthly.toFixed(2),
+                    weekly: weekly.toString(),
+                    daily: daily.toFixed(2),
+                    hourly: hourly.toFixed(2)
+                };
+            }
+
+            calculateFromDaily(daily) {
+                const weekly = daily * 5;
+                const annual = weekly * 52;
+                const monthly = annual / 12;
+                const hourly = weekly / this.hoursPerWeek;
+                
+                return {
+                    annual: annual.toFixed(2),
+                    monthly: monthly.toFixed(2),
+                    weekly: weekly.toFixed(2),
+                    daily: daily.toString(),
+                    hourly: hourly.toFixed(2)
+                };
+            }
+
+            calculateFromHourly(hourly) {
+                const weekly = hourly * this.hoursPerWeek;
+                const annual = weekly * 52;
+                const monthly = annual / 12;
+                const daily = weekly / 5;
+                
+                return {
+                    annual: annual.toFixed(2),
+                    monthly: monthly.toFixed(2),
+                    weekly: weekly.toFixed(2),
+                    daily: daily.toFixed(2),
+                    hourly: hourly.toString()
+                };
+            }
+
+            updateInputs(calculations, skipType) {
+                Object.keys(calculations).forEach(key => {
+                    if (key !== skipType && this.inputs[key]) {
+                        const value = calculations[key];
+                        this.inputs[key].value = value === '0.00' ? '' : value;
+                    }
+                });
+            }
+
+            updateTimeIntervals(hourlyRate) {
+                const rate = parseFloat(hourlyRate) || 0;
+                const timeIntervals = document.getElementById('timeIntervals');
+                
+                if (rate > 0) {
+                    timeIntervals.classList.remove('hidden');
+                    document.getElementById('perMinute').textContent = `$${(rate / 60).toFixed(4)}`;
+                    document.getElementById('perSecond').textContent = `$${(rate / 3600).toFixed(6)}`;
+                } else {
+                    timeIntervals.classList.add('hidden');
+                }
+            }
+
+            updateCalculations(calculations) {
+                const calculationsDiv = document.getElementById('calculations');
+                const rate = parseFloat(calculations.hourly) || 0;
+                
+                if (rate > 0) {
+                    calculationsDiv.classList.remove('hidden');
+                    document.getElementById('annualCalc').textContent = 
+                        `Annual to Hourly: $${calculations.annual} ÷ 52 weeks ÷ ${this.hoursPerWeek} hours = $${calculations.hourly}/hour`;
+                    document.getElementById('monthlyCalc').textContent = 
+                        `Monthly to Hourly: $${calculations.monthly} × 12 ÷ 52 weeks ÷ ${this.hoursPerWeek} hours = $${calculations.hourly}/hour`;
+                } else {
+                    calculationsDiv.classList.add('hidden');
+                }
+            }
+
+            recalculateAll() {
+                // Find the first non-empty input and recalculate from there
+                const nonEmptyInput = Object.keys(this.inputs).find(key => {
+                    if (key === 'hoursPerWeek') return false;
+                    const value = this.inputs[key].value;
+                    return value && parseFloat(value) > 0;
+                });
+                
+                if (nonEmptyInput) {
+                    this.handleInputChange(nonEmptyInput, this.inputs[nonEmptyInput].value);
+                }
+            }
+        }
+
+        // Initialize the calculator when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new SalaryCalculator();
+        });
+    </script>
+</body>
+</html>
